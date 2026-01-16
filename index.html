@@ -1,23 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vectorial PSF Generator - Research-Grade Microscopy Simulation</title>
-    <meta name="description" content="Browser-based vectorial diffraction PSF generator using the Debye-Wolf integral for quantitative microscopy simulation.">
-    
+    <meta name="description"
+        content="Browser-based vectorial diffraction PSF generator using the Debye-Wolf integral for quantitative microscopy simulation.">
+
     <!-- UTIF.js for TIFF export -->
     <script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.min.js"></script>
     <!-- pako for compression -->
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-    
+
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: #f5f5f5;
@@ -25,97 +27,99 @@
             line-height: 1.6;
             padding: 20px;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
-        
+
         h1 {
             font-size: 1.5rem;
             margin-bottom: 0.5rem;
             color: #1a1a1a;
         }
-        
+
         .subtitle {
             color: #666;
             font-size: 0.9rem;
             margin-bottom: 1.5rem;
         }
-        
+
         .main-grid {
             display: grid;
             grid-template-columns: 320px 1fr;
             gap: 20px;
         }
-        
+
         @media (max-width: 900px) {
             .main-grid {
                 grid-template-columns: 1fr;
             }
         }
-        
+
         .panel {
             background: white;
             border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-        
+
         .panel h2 {
             font-size: 1rem;
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
             border-bottom: 1px solid #eee;
         }
-        
+
         .form-group {
             margin-bottom: 1rem;
         }
-        
+
         .form-group label {
             display: block;
             font-size: 0.85rem;
             font-weight: 500;
             margin-bottom: 0.25rem;
         }
-        
+
         .form-group .hint {
             font-size: 0.75rem;
             color: #888;
             margin-top: 0.25rem;
         }
-        
-        .form-group input, .form-group select {
+
+        .form-group input,
+        .form-group select {
             width: 100%;
             padding: 8px 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 0.9rem;
         }
-        
-        .form-group input:focus, .form-group select:focus {
+
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             border-color: #0066cc;
         }
-        
+
         .required::after {
             content: ' *';
             color: #cc0000;
         }
-        
+
         .optional-section {
             margin-top: 1.5rem;
             padding-top: 1rem;
             border-top: 1px dashed #ddd;
         }
-        
+
         .optional-section h3 {
             font-size: 0.85rem;
             color: #666;
             margin-bottom: 1rem;
         }
-        
+
         .btn {
             display: inline-block;
             padding: 10px 20px;
@@ -125,85 +129,86 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        
+
         .btn-primary {
             background: #0066cc;
             color: white;
             width: 100%;
         }
-        
+
         .btn-primary:hover {
             background: #0052a3;
         }
-        
+
         .btn-primary:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
-        
+
         .btn-secondary {
             background: #eee;
             color: #333;
             margin-right: 8px;
             margin-bottom: 8px;
         }
-        
+
         .btn-secondary:hover {
             background: #ddd;
         }
-        
+
         .progress-container {
             margin-top: 1rem;
             display: none;
         }
-        
+
         .progress-bar {
             height: 4px;
             background: #eee;
             border-radius: 2px;
             overflow: hidden;
         }
-        
+
         .progress-fill {
             height: 100%;
             background: #0066cc;
             width: 0%;
             transition: width 0.1s;
         }
-        
+
         .progress-text {
             font-size: 0.8rem;
             color: #666;
             margin-top: 0.5rem;
         }
-        
+
         .results-panel {
             display: flex;
             flex-direction: column;
         }
-        
+
         .canvas-container {
             background: #1a1a1a;
             border-radius: 4px;
-            padding: 10px;
+            padding: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 400px;
+            min-height: 520px;
             position: relative;
         }
-        
+
         #psfCanvas {
-            max-width: 100%;
-            max-height: 500px;
+            width: 512px;
+            height: 512px;
             image-rendering: pixelated;
+            image-rendering: crisp-edges;
         }
-        
+
         .placeholder-text {
             color: #666;
             font-size: 0.9rem;
         }
-        
+
         .info-box {
             margin-top: 1rem;
             padding: 12px;
@@ -211,55 +216,55 @@
             border-radius: 4px;
             font-size: 0.8rem;
         }
-        
+
         .info-box.warning {
             background: #fff8e6;
         }
-        
+
         .info-box h4 {
             font-size: 0.85rem;
             margin-bottom: 0.5rem;
         }
-        
+
         .info-box ul {
             margin-left: 1.2rem;
         }
-        
+
         .info-box li {
             margin-bottom: 0.25rem;
         }
-        
+
         .download-section {
             margin-top: 1rem;
             display: none;
         }
-        
+
         .z-slice-controls {
             margin-top: 1rem;
             display: none;
         }
-        
+
         .z-slider-container {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .z-slider-container input[type="range"] {
             flex: 1;
         }
-        
+
         .z-value {
             min-width: 80px;
             text-align: right;
             font-size: 0.85rem;
             font-family: monospace;
         }
-        
+
         .theory-section {
             margin-top: 20px;
         }
-        
+
         .collapsible {
             cursor: pointer;
             padding: 10px;
@@ -271,11 +276,11 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .collapsible:hover {
             background: #f0f0f0;
         }
-        
+
         .collapsible-content {
             display: none;
             padding: 15px;
@@ -284,20 +289,20 @@
             border-radius: 0 0 4px 4px;
             font-size: 0.85rem;
         }
-        
+
         .collapsible-content.show {
             display: block;
         }
-        
+
         .collapsible-content h4 {
             margin-top: 1rem;
             margin-bottom: 0.5rem;
         }
-        
+
         .collapsible-content h4:first-child {
             margin-top: 0;
         }
-        
+
         .collapsible-content pre {
             background: #f5f5f5;
             padding: 10px;
@@ -305,24 +310,25 @@
             overflow-x: auto;
             font-size: 0.8rem;
         }
-        
+
         .collapsible-content table {
             width: 100%;
             border-collapse: collapse;
             margin: 0.5rem 0;
         }
-        
-        .collapsible-content th, .collapsible-content td {
+
+        .collapsible-content th,
+        .collapsible-content td {
             border: 1px solid #ddd;
             padding: 6px 10px;
             text-align: left;
             font-size: 0.8rem;
         }
-        
+
         .collapsible-content th {
             background: #f5f5f5;
         }
-        
+
         .model-badge {
             display: inline-block;
             padding: 2px 8px;
@@ -332,81 +338,83 @@
             color: #0066cc;
             margin-left: 8px;
         }
-        
+
         .error-message {
             color: #cc0000;
             font-size: 0.85rem;
             margin-top: 0.5rem;
             display: none;
         }
-        
+
         .checkbox-group {
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        
+
         .checkbox-group input[type="checkbox"] {
             width: auto;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Vectorial PSF Generator <span class="model-badge">Debye-Wolf + Gibson-Lanni</span></h1>
         <p class="subtitle">Research-grade point-spread function simulation for quantitative microscopy</p>
-        
+
         <div class="main-grid">
             <div class="panel">
                 <h2>Parameters</h2>
-                
+
                 <div class="form-group">
                     <label class="required">Wavelength (nm)</label>
                     <input type="number" id="wavelength" value="525" min="300" max="1000" step="1">
                     <p class="hint">Emission wavelength (e.g., 525 for GFP)</p>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="required">Numerical Aperture (NA)</label>
                     <input type="number" id="na" value="1.4" min="0.1" max="1.7" step="0.01">
                     <p class="hint">Objective NA (e.g., 1.4 for oil immersion)</p>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="required">Immersion Medium Refractive Index (n<sub>i</sub>)</label>
                     <input type="number" id="ni" value="1.518" min="1.0" max="2.0" step="0.001">
                     <p class="hint">1.0 (air), 1.33 (water), 1.518 (oil)</p>
                 </div>
-                
+
                 <div class="optional-section">
                     <h3>Optional Parameters (intelligent defaults applied)</h3>
-                    
+
                     <div class="form-group">
                         <label>Pixel Size (nm)</label>
-                        <input type="number" id="pixelSize" placeholder="Auto (Nyquist)" min="1" max="500" step="1">
-                        <p class="hint">Leave empty for Nyquist-compliant sampling</p>
+                        <input type="number" id="pixelSize" placeholder="Auto (optimal for PSF)" min="1" max="500"
+                            step="1">
+                        <p class="hint">Leave empty for optimal sampling (shows Airy rings)</p>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Grid Size (pixels)</label>
-                        <input type="number" id="gridSize" value="128" min="32" max="512" step="1">
-                        <p class="hint">Output image dimensions (32-512)</p>
+                        <input type="number" id="gridSize" value="256" min="64" max="512" step="1">
+                        <p class="hint">Output image dimensions (64-512)</p>
                     </div>
-                    
+
                     <div class="form-group">
                         <div class="checkbox-group">
                             <input type="checkbox" id="enable3d">
                             <label for="enable3d">Enable 3D PSF Stack</label>
                         </div>
                     </div>
-                    
+
                     <div id="zRangeSection" style="display: none;">
                         <div class="form-group">
                             <label>Z-Range (µm)</label>
                             <input type="number" id="zRange" placeholder="Auto (±2× DOF)" min="0.1" max="20" step="0.1">
                             <p class="hint">Total axial range centered on focus</p>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Number of Z-Slices</label>
                             <input type="number" id="zSlices" value="41" min="5" max="201" step="2">
@@ -414,10 +422,10 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="optional-section">
                     <h3>Refractive Index Mismatch (Gibson-Lanni Model)</h3>
-                    
+
                     <div class="form-group">
                         <div class="checkbox-group">
                             <input type="checkbox" id="enableMismatch">
@@ -425,26 +433,26 @@
                         </div>
                         <p class="hint">Accounts for cover glass / sample RI differences</p>
                     </div>
-                    
+
                     <div id="mismatchSection" style="display: none;">
                         <div class="form-group">
                             <label>Cover Glass RI (n<sub>g</sub>)</label>
                             <input type="number" id="ng" value="1.522" min="1.0" max="2.0" step="0.001">
                             <p class="hint">Standard cover glass ≈ 1.522</p>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Sample RI (n<sub>s</sub>)</label>
                             <input type="number" id="ns" value="1.33" min="1.0" max="2.0" step="0.001">
                             <p class="hint">Water/cytoplasm ≈ 1.33-1.38</p>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Imaging Depth in Sample (µm)</label>
                             <input type="number" id="imagingDepth" value="0" min="0" max="100" step="0.5">
                             <p class="hint">Depth below cover glass</p>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Cover Glass Thickness Error (µm)</label>
                             <input type="number" id="glassError" value="0" min="-10" max="10" step="0.1">
@@ -452,12 +460,12 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div style="margin-top: 1.5rem;">
                     <button class="btn btn-primary" id="computeBtn" onclick="computePSF()">Compute PSF</button>
                     <p class="error-message" id="errorMsg"></p>
                 </div>
-                
+
                 <div class="progress-container" id="progressContainer">
                     <div class="progress-bar">
                         <div class="progress-fill" id="progressFill"></div>
@@ -465,15 +473,15 @@
                     <p class="progress-text" id="progressText">Initializing...</p>
                 </div>
             </div>
-            
+
             <div class="panel results-panel">
                 <h2>PSF Output</h2>
-                
+
                 <div class="canvas-container">
                     <canvas id="psfCanvas" width="400" height="400" style="display: none;"></canvas>
                     <p class="placeholder-text" id="placeholder">Configure parameters and click "Compute PSF"</p>
                 </div>
-                
+
                 <div class="z-slice-controls" id="zSliceControls">
                     <label style="font-size: 0.85rem; font-weight: 500;">Z-Position:</label>
                     <div class="z-slider-container">
@@ -481,25 +489,37 @@
                         <span class="z-value" id="zValue">z = 0.000 µm</span>
                     </div>
                 </div>
-                
+
+                <div class="form-group" id="displayControls" style="display: none; margin-top: 1rem;">
+                    <label style="font-size: 0.85rem; font-weight: 500;">Display Scaling:</label>
+                    <select id="displayScale" onchange="redisplayPSF()" style="width: auto; padding: 6px 10px;">
+                        <option value="linear">Linear (quantitative)</option>
+                        <option value="sqrt" selected>Square Root (enhanced)</option>
+                        <option value="log">Logarithmic (max contrast)</option>
+                    </select>
+                    <p class="hint">Affects display only. Downloads preserve linear intensity data.</p>
+                </div>
+
                 <div class="info-box" id="computedParams" style="display: none;">
                     <h4>Computed Parameters</h4>
                     <ul id="paramsList"></ul>
                 </div>
-                
+
                 <div class="download-section" id="downloadSection">
                     <button class="btn btn-secondary" onclick="downloadPNG()">Download PNG</button>
                     <button class="btn btn-secondary" onclick="downloadTIFF()">Download TIFF (32-bit)</button>
-                    <button class="btn btn-secondary" id="download3dBtn" style="display: none;" onclick="download3DTIFF()">Download 3D Stack (TIFF)</button>
+                    <button class="btn btn-secondary" id="download3dBtn" style="display: none;"
+                        onclick="download3DTIFF()">Download 3D Stack (TIFF)</button>
                 </div>
-                
+
                 <div class="info-box warning" style="margin-top: 1rem;">
                     <h4>Intensity Scaling Note</h4>
-                    <p>PSF intensities are normalized to peak = 1.0. TIFF exports preserve full 32-bit floating-point values. PNG uses linear mapping to 8-bit grayscale (0-255).</p>
+                    <p>PSF intensities are normalized to peak = 1.0. TIFF exports preserve full 32-bit floating-point
+                        values. PNG uses linear mapping to 8-bit grayscale (0-255).</p>
                 </div>
             </div>
         </div>
-        
+
         <div class="theory-section panel">
             <div class="collapsible" onclick="toggleTheory()">
                 <span>📖 Physical Model & Scientific Documentation</span>
@@ -507,16 +527,19 @@
             </div>
             <div class="collapsible-content" id="theoryContent">
                 <h4>Vectorial Diffraction Model (Debye-Wolf Integral)</h4>
-                <p>This PSF generator implements the <strong>vectorial diffraction theory</strong> based on the Debye-Wolf integral, which provides an exact solution for high-NA optical systems. Unlike scalar (Airy/Gaussian) approximations, this model correctly accounts for:</p>
+                <p>This PSF generator implements the <strong>vectorial diffraction theory</strong> based on the
+                    Debye-Wolf integral, which provides an exact solution for high-NA optical systems. Unlike scalar
+                    (Airy/Gaussian) approximations, this model correctly accounts for:</p>
                 <ul>
                     <li>Polarization effects at high numerical apertures</li>
                     <li>Apodization from the Abbe sine condition</li>
                     <li>Non-paraxial propagation (valid for all NA values)</li>
                     <li>Asymmetric axial PSF structure</li>
                 </ul>
-                
+
                 <h4>Mathematical Formulation</h4>
-                <p>For circularly polarized or unpolarized illumination, the total intensity PSF is computed from three diffraction integrals:</p>
+                <p>For circularly polarized or unpolarized illumination, the total intensity PSF is computed from three
+                    diffraction integrals:</p>
                 <pre>
 I₀(ρ,z) = ∫₀^θmax √cos(θ) · sin(θ) · (1+cos(θ)) · J₀(kρ·sin(θ)) · exp(ikΦ) dθ
 I₁(ρ,z) = ∫₀^θmax √cos(θ) · sin²(θ) · J₁(kρ·sin(θ)) · exp(ikΦ) dθ
@@ -525,7 +548,7 @@ I₂(ρ,z) = ∫₀^θmax √cos(θ) · sin(θ) · (1-cos(θ)) · J₂(kρ·sin(
 PSF(ρ,z) = |I₀|² + 2|I₁|² + |I₂|²
                 </pre>
                 <p>Where θmax = arcsin(NA/nᵢ), k = 2πnᵢ/λ, and Jₙ are Bessel functions of the first kind.</p>
-                
+
                 <h4>Gibson-Lanni Aberration Model</h4>
                 <p>When RI mismatch is enabled, the optical path difference (OPD) includes contributions from:</p>
                 <pre>
@@ -535,40 +558,109 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
              + d·(n_s·cos(θ_s) - n_i·cos(θ_i))      [sample depth term]
                 </pre>
                 <p>where Snell's law relates angles in each medium: nᵢ·sin(θ) = n_g·sin(θ_g) = n_s·sin(θ_s)</p>
-                
+
                 <h4>Physical Assumptions</h4>
                 <table>
-                    <tr><th>Assumption</th><th>Value/Condition</th><th>Notes</th></tr>
-                    <tr><td>Illumination</td><td>Circularly polarized / unpolarized</td><td>Standard fluorescence microscopy</td></tr>
-                    <tr><td>Objective</td><td>Airy pupil, no aberrations</td><td>Perfect lens (aberration-free)</td></tr>
-                    <tr><td>Detection</td><td>Incoherent intensity</td><td>Sum of polarization components</td></tr>
-                    <tr><td>Numerical integration</td><td>128-point Gauss-Legendre quadrature</td><td>High accuracy (~10⁻¹⁰ relative error)</td></tr>
+                    <tr>
+                        <th>Assumption</th>
+                        <th>Value/Condition</th>
+                        <th>Notes</th>
+                    </tr>
+                    <tr>
+                        <td>Illumination</td>
+                        <td>Circularly polarized / unpolarized</td>
+                        <td>Standard fluorescence microscopy</td>
+                    </tr>
+                    <tr>
+                        <td>Objective</td>
+                        <td>Airy pupil, no aberrations</td>
+                        <td>Perfect lens (aberration-free)</td>
+                    </tr>
+                    <tr>
+                        <td>Detection</td>
+                        <td>Incoherent intensity</td>
+                        <td>Sum of polarization components</td>
+                    </tr>
+                    <tr>
+                        <td>Numerical integration</td>
+                        <td>128-point Gauss-Legendre quadrature</td>
+                        <td>High accuracy (~10⁻¹⁰ relative error)</td>
+                    </tr>
                 </table>
-                
+
                 <h4>Comparison to Established Tools</h4>
                 <table>
-                    <tr><th>Feature</th><th>This Tool</th><th>PSFGenerator (MATLAB)</th><th>Python-microscPSF</th></tr>
-                    <tr><td>Diffraction model</td><td>Vectorial Debye-Wolf</td><td>Vectorial Debye-Wolf</td><td>Scalar/Vectorial</td></tr>
-                    <tr><td>RI mismatch</td><td>Gibson-Lanni</td><td>Gibson-Lanni</td><td>Gibson-Lanni</td></tr>
-                    <tr><td>Aberrations</td><td>Spherical only (from RI)</td><td>Zernike polynomials</td><td>Varies</td></tr>
-                    <tr><td>Precision</td><td>64-bit float (JS)</td><td>64-bit float</td><td>64-bit float</td></tr>
+                    <tr>
+                        <th>Feature</th>
+                        <th>This Tool</th>
+                        <th>PSFGenerator (MATLAB)</th>
+                        <th>Python-microscPSF</th>
+                    </tr>
+                    <tr>
+                        <td>Diffraction model</td>
+                        <td>Vectorial Debye-Wolf</td>
+                        <td>Vectorial Debye-Wolf</td>
+                        <td>Scalar/Vectorial</td>
+                    </tr>
+                    <tr>
+                        <td>RI mismatch</td>
+                        <td>Gibson-Lanni</td>
+                        <td>Gibson-Lanni</td>
+                        <td>Gibson-Lanni</td>
+                    </tr>
+                    <tr>
+                        <td>Aberrations</td>
+                        <td>Spherical only (from RI)</td>
+                        <td>Zernike polynomials</td>
+                        <td>Varies</td>
+                    </tr>
+                    <tr>
+                        <td>Precision</td>
+                        <td>64-bit float (JS)</td>
+                        <td>64-bit float</td>
+                        <td>64-bit float</td>
+                    </tr>
                 </table>
-                
+
                 <h4>Browser Limitations</h4>
                 <table>
-                    <tr><th>Limitation</th><th>Impact</th><th>Mitigation</th></tr>
-                    <tr><td>JavaScript precision</td><td>IEEE 754 64-bit (~15-17 digits)</td><td>Sufficient for PSF accuracy</td></tr>
-                    <tr><td>Memory constraints</td><td>Large 3D stacks may fail</td><td>Grid size limited to 512×512</td></tr>
-                    <tr><td>Single-threaded</td><td>UI may freeze during computation</td><td>Web Worker (async computation)</td></tr>
-                    <tr><td>Bessel functions</td><td>Custom implementation</td><td>Polynomial approximation (error &lt; 10⁻⁸)</td></tr>
+                    <tr>
+                        <th>Limitation</th>
+                        <th>Impact</th>
+                        <th>Mitigation</th>
+                    </tr>
+                    <tr>
+                        <td>JavaScript precision</td>
+                        <td>IEEE 754 64-bit (~15-17 digits)</td>
+                        <td>Sufficient for PSF accuracy</td>
+                    </tr>
+                    <tr>
+                        <td>Memory constraints</td>
+                        <td>Large 3D stacks may fail</td>
+                        <td>Grid size limited to 512×512</td>
+                    </tr>
+                    <tr>
+                        <td>Single-threaded</td>
+                        <td>UI may freeze during computation</td>
+                        <td>Web Worker (async computation)</td>
+                    </tr>
+                    <tr>
+                        <td>Bessel functions</td>
+                        <td>Custom implementation</td>
+                        <td>Polynomial approximation (error &lt; 10⁻⁸)</td>
+                    </tr>
                 </table>
-                
+
                 <h4>References</h4>
                 <ul>
-                    <li>Wolf, E. (1959). Electromagnetic diffraction in optical systems. Proc. Roy. Soc. A 253, 349-357.</li>
-                    <li>Richards, B. & Wolf, E. (1959). Electromagnetic diffraction in optical systems II. Proc. Roy. Soc. A 253, 358-379.</li>
-                    <li>Gibson, S.F. & Lanni, F. (1992). Experimental test of an analytical model of aberration in an oil-immersion objective. J. Opt. Soc. Am. A 9, 154-166.</li>
-                    <li>Haeberle, O. et al. (2003). The point spread function of optical microscopes imaging through stratified media. Opt. Express 11, 2249-2259.</li>
+                    <li>Wolf, E. (1959). Electromagnetic diffraction in optical systems. Proc. Roy. Soc. A 253, 349-357.
+                    </li>
+                    <li>Richards, B. & Wolf, E. (1959). Electromagnetic diffraction in optical systems II. Proc. Roy.
+                        Soc. A 253, 358-379.</li>
+                    <li>Gibson, S.F. & Lanni, F. (1992). Experimental test of an analytical model of aberration in an
+                        oil-immersion objective. J. Opt. Soc. Am. A 9, 154-166.</li>
+                    <li>Haeberle, O. et al. (2003). The point spread function of optical microscopes imaging through
+                        stratified media. Opt. Express 11, 2249-2259.</li>
                 </ul>
             </div>
         </div>
@@ -589,38 +681,38 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
         let computedPixelSize = null;
         let computedZPositions = null;
         let isComputing = false;
-        
+
         // UI event handlers
-        document.getElementById('enable3d').addEventListener('change', function() {
+        document.getElementById('enable3d').addEventListener('change', function () {
             document.getElementById('zRangeSection').style.display = this.checked ? 'block' : 'none';
         });
-        
-        document.getElementById('enableMismatch').addEventListener('change', function() {
+
+        document.getElementById('enableMismatch').addEventListener('change', function () {
             document.getElementById('mismatchSection').style.display = this.checked ? 'block' : 'none';
         });
-        
-        document.getElementById('zSlider').addEventListener('input', function() {
+
+        document.getElementById('zSlider').addEventListener('input', function () {
             if (psfStack) {
                 const idx = parseInt(this.value);
                 displayPSFSlice(idx);
-                document.getElementById('zValue').textContent = 
+                document.getElementById('zValue').textContent =
                     `z = ${computedZPositions[idx].toFixed(3)} µm`;
             }
         });
-        
+
         function toggleTheory() {
             const content = document.getElementById('theoryContent');
             const icon = document.getElementById('collapseIcon');
             content.classList.toggle('show');
             icon.textContent = content.classList.contains('show') ? '▲' : '▼';
         }
-        
+
         // ============================================================
         // BESSEL FUNCTIONS - High-precision polynomial approximation
         // ============================================================
         // Based on Abramowitz & Stegun approximations
         // Relative error < 1e-8 for all x
-        
+
         function besselJ0(x) {
             const ax = Math.abs(x);
             if (ax < 8.0) {
@@ -638,11 +730,11 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                     + y * (-0.2073370639e-5 + y * 0.2093887211e-6)));
                 const ans2 = -0.1562499995e-1 + y * (0.1430488765e-3
                     + y * (-0.6911147651e-5 + y * (0.7621095161e-6
-                    - y * 0.934945152e-7)));
+                        - y * 0.934945152e-7)));
                 return Math.sqrt(0.636619772 / ax) * (Math.cos(xx) * ans1 - z * Math.sin(xx) * ans2);
             }
         }
-        
+
         function besselJ1(x) {
             const ax = Math.abs(x);
             if (ax < 8.0) {
@@ -660,33 +752,33 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                     + y * (0.2457520174e-5 + y * (-0.240337019e-6))));
                 const ans2 = 0.04687499995 + y * (-0.2002690873e-3
                     + y * (0.8449199096e-5 + y * (-0.88228987e-6
-                    + y * 0.105787412e-6)));
+                        + y * 0.105787412e-6)));
                 const ans = Math.sqrt(0.636619772 / ax) * (Math.cos(xx) * ans1 - z * Math.sin(xx) * ans2);
                 return x < 0.0 ? -ans : ans;
             }
         }
-        
+
         function besselJ2(x) {
             // J2(x) = 2*J1(x)/x - J0(x)
             if (Math.abs(x) < 1e-10) return 0;
             return 2.0 * besselJ1(x) / x - besselJ0(x);
         }
-        
+
         // ============================================================
         // GAUSS-LEGENDRE QUADRATURE - 128 points for high accuracy
         // ============================================================
-        
+
         function gaussLegendreNodes(n) {
             // Compute nodes and weights for Gauss-Legendre quadrature
             const nodes = [];
             const weights = [];
             const m = Math.floor((n + 1) / 2);
-            
+
             for (let i = 0; i < m; i++) {
                 // Initial guess using Chebyshev approximation
                 let z = Math.cos(Math.PI * (i + 0.75) / (n + 0.5));
                 let z1, pp;
-                
+
                 // Newton-Raphson refinement
                 do {
                     let p1 = 1.0;
@@ -700,32 +792,32 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                     z1 = z;
                     z = z1 - p1 / pp;
                 } while (Math.abs(z - z1) > 1e-15);
-                
+
                 nodes.push(-z);
                 nodes.push(z);
                 const w = 2.0 / ((1 - z * z) * pp * pp);
                 weights.push(w);
                 weights.push(w);
             }
-            
+
             // Sort by node value
-            const pairs = nodes.map((n, i) => ({node: n, weight: weights[i]}));
+            const pairs = nodes.map((n, i) => ({ node: n, weight: weights[i] }));
             pairs.sort((a, b) => a.node - b.node);
-            
+
             return {
                 nodes: pairs.map(p => p.node),
                 weights: pairs.map(p => p.weight)
             };
         }
-        
+
         // Pre-compute quadrature points
         const QUAD_POINTS = 128;
         const quadrature = gaussLegendreNodes(QUAD_POINTS);
-        
+
         // ============================================================
         // VECTORIAL PSF COMPUTATION - DEBYE-WOLF INTEGRAL
         // ============================================================
-        
+
         function computeVectorialPSF(params, progressCallback) {
             const {
                 wavelength,     // nm
@@ -740,32 +832,32 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                 imagingDepth,   // nm
                 glassError      // nm
             } = params;
-            
+
             const lambda = wavelength; // nm
             const k = 2.0 * Math.PI * ni / lambda; // wave vector in medium
             const thetaMax = Math.asin(na / ni);
-            
+
             // Transform quadrature from [-1,1] to [0, thetaMax]
             const thetaNodes = quadrature.nodes.map(t => thetaMax * (t + 1) / 2);
             const thetaWeights = quadrature.weights.map(w => w * thetaMax / 2);
-            
+
             // Pre-compute static terms for each theta
             const staticTerms = thetaNodes.map(theta => {
                 const cosT = Math.cos(theta);
                 const sinT = Math.sin(theta);
                 const sqrtCosT = Math.sqrt(cosT);
-                
+
                 // Apodization and angular terms
                 const term0 = sqrtCosT * sinT * (1 + cosT);
                 const term1 = sqrtCosT * sinT * sinT;
                 const term2 = sqrtCosT * sinT * (1 - cosT);
-                
+
                 // RI mismatch OPD if enabled
                 let opdMismatch = 0;
                 if (enableMismatch) {
                     // Gibson-Lanni model
                     const sinTi = sinT;
-                    
+
                     // Cover glass
                     const sinTg = (ni / ng) * sinTi;
                     if (Math.abs(sinTg) < 1) {
@@ -773,7 +865,7 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                         const cosTi = cosT;
                         opdMismatch += glassError * (ng * cosTg - ni * cosTi);
                     }
-                    
+
                     // Sample depth
                     const sinTs = (ni / ns) * sinTi;
                     if (Math.abs(sinTs) < 1) {
@@ -782,7 +874,7 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                         opdMismatch += imagingDepth * (ns * cosTs - ni * cosTi);
                     }
                 }
-                
+
                 return {
                     theta,
                     cosT,
@@ -793,70 +885,70 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                     opdMismatch
                 };
             });
-            
+
             // Compute PSF for each z position
             const nZ = zPositions.length;
             const psfStack = [];
             const halfGrid = (gridSize - 1) / 2;
-            
+
             for (let iz = 0; iz < nZ; iz++) {
                 const z = zPositions[iz]; // nm
                 const psf2D = new Float64Array(gridSize * gridSize);
-                
+
                 for (let iy = 0; iy < gridSize; iy++) {
                     for (let ix = 0; ix < gridSize; ix++) {
                         // Radial distance in nm
                         const dx = (ix - halfGrid) * pixelSize;
                         const dy = (iy - halfGrid) * pixelSize;
                         const rho = Math.sqrt(dx * dx + dy * dy);
-                        
+
                         // Compute diffraction integrals I0, I1, I2
                         let I0_re = 0, I0_im = 0;
                         let I1_re = 0, I1_im = 0;
                         let I2_re = 0, I2_im = 0;
-                        
+
                         for (let it = 0; it < thetaNodes.length; it++) {
                             const st = staticTerms[it];
                             const weight = thetaWeights[it];
-                            
+
                             // Phase: k*z*cos(theta) + OPD_mismatch
                             const phase = k * (z * st.cosT + st.opdMismatch);
                             const expRe = Math.cos(phase);
                             const expIm = Math.sin(phase);
-                            
+
                             // Bessel function argument
                             const kRhoSin = k * rho * st.sinT;
                             const j0 = besselJ0(kRhoSin);
                             const j1 = besselJ1(kRhoSin);
                             const j2 = besselJ2(kRhoSin);
-                            
+
                             // Accumulate integrals (weighted)
                             I0_re += weight * st.term0 * j0 * expRe;
                             I0_im += weight * st.term0 * j0 * expIm;
-                            
+
                             I1_re += weight * st.term1 * j1 * expRe;
                             I1_im += weight * st.term1 * j1 * expIm;
-                            
+
                             I2_re += weight * st.term2 * j2 * expRe;
                             I2_im += weight * st.term2 * j2 * expIm;
                         }
-                        
+
                         // Intensity: |I0|^2 + 2|I1|^2 + |I2|^2
                         const I0_mag2 = I0_re * I0_re + I0_im * I0_im;
                         const I1_mag2 = I1_re * I1_re + I1_im * I1_im;
                         const I2_mag2 = I2_re * I2_re + I2_im * I2_im;
-                        
+
                         psf2D[iy * gridSize + ix] = I0_mag2 + 2 * I1_mag2 + I2_mag2;
                     }
                 }
-                
+
                 psfStack.push(psf2D);
-                
+
                 if (progressCallback) {
                     progressCallback((iz + 1) / nZ);
                 }
             }
-            
+
             // Normalize to peak = 1
             let maxVal = 0;
             for (const slice of psfStack) {
@@ -864,7 +956,7 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                     if (slice[i] > maxVal) maxVal = slice[i];
                 }
             }
-            
+
             if (maxVal > 0) {
                 for (const slice of psfStack) {
                     for (let i = 0; i < slice.length; i++) {
@@ -872,90 +964,108 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                     }
                 }
             }
-            
+
             return psfStack;
         }
-        
+
         // ============================================================
         // MAIN COMPUTATION HANDLER
         // ============================================================
-        
+
         function computePSF() {
             if (isComputing) return;
-            
+
             // Validate required inputs
             const wavelength = parseFloat(document.getElementById('wavelength').value);
             const na = parseFloat(document.getElementById('na').value);
             const ni = parseFloat(document.getElementById('ni').value);
-            
+
             const errorMsg = document.getElementById('errorMsg');
             errorMsg.style.display = 'none';
-            
+
             if (isNaN(wavelength) || wavelength < 300 || wavelength > 1000) {
                 errorMsg.textContent = 'Wavelength must be between 300-1000 nm';
                 errorMsg.style.display = 'block';
                 return;
             }
-            
+
             if (isNaN(na) || na < 0.1 || na > 1.7) {
                 errorMsg.textContent = 'NA must be between 0.1-1.7';
                 errorMsg.style.display = 'block';
                 return;
             }
-            
+
             if (isNaN(ni) || ni < 1.0 || ni > 2.0) {
                 errorMsg.textContent = 'Refractive index must be between 1.0-2.0';
                 errorMsg.style.display = 'block';
                 return;
             }
-            
+
             if (na > ni) {
                 errorMsg.textContent = 'NA cannot exceed immersion medium RI';
                 errorMsg.style.display = 'block';
                 return;
             }
-            
+
             // Get optional parameters with intelligent defaults
             let pixelSize = parseFloat(document.getElementById('pixelSize').value);
             let gridSize = parseInt(document.getElementById('gridSize').value) || 128;
             const enable3d = document.getElementById('enable3d').checked;
             const enableMismatch = document.getElementById('enableMismatch').checked;
-            
+
             // Enforce grid size limits
-            gridSize = Math.max(32, Math.min(512, gridSize));
-            
-            // Nyquist-compliant pixel size: λ / (4 × NA)
-            const nyquistPixel = wavelength / (4 * na);
+            gridSize = Math.max(64, Math.min(512, gridSize));
+
+            // Calculate PSF-related sizes
+            const nyquistPixel = wavelength / (4 * na);  // Nyquist criterion
+            const airyRadius = 0.61 * wavelength / na;   // First Airy zero
+            const psfExtent = airyRadius * 6;            // Show ~3 rings on each side
+
+            // Optimal pixel size: show PSF structure clearly
+            // Calculate pixel size so that PSF fills ~60% of the canvas
             const pixelSizeAuto = isNaN(pixelSize) || pixelSize <= 0;
             if (pixelSizeAuto) {
-                pixelSize = Math.round(nyquistPixel);
+                // For NA = 1.4, wavelength = 525nm:
+                // Airy radius ≈ 229nm, showing 8x Airy radius = 1830nm total
+                // For 256 grid: 1830/256 = 7nm per pixel
+                // For 128 grid: 1830/128 = 14nm per pixel
+                // For 64 grid: 1830/64 = 29nm per pixel
+
+                // Target: PSF central lobe + 2-3 rings fills ~60% of canvas
+                const targetPSFDiameter = airyRadius * 8;  // ~4 Airy radii on each side (2-3 rings)
+                const targetPSFPixels = gridSize * 0.6;    // Fill 60% of canvas
+                pixelSize = Math.round(targetPSFDiameter / targetPSFPixels);
+
+                // Minimum of 5nm to avoid excessive computation, max of Nyquist for scientific validity
+                pixelSize = Math.max(pixelSize, 5);
+                pixelSize = Math.min(pixelSize, Math.round(nyquistPixel));
             }
             computedPixelSize = pixelSize;
-            
+
             // Depth of focus: λ / (NA²)
             const dof = wavelength / (na * na);  // nm
-            
+
             // Z parameters
             let zPositions = [0]; // Default: focal plane only
-            
+
             if (enable3d) {
                 let zRange = parseFloat(document.getElementById('zRange').value) * 1000; // µm to nm
                 const zSlices = parseInt(document.getElementById('zSlices').value) || 41;
-                
+
                 const zRangeAuto = isNaN(zRange) || zRange <= 0;
                 if (zRangeAuto) {
                     zRange = 4 * dof;  // ±2× DOF
                 }
-                
+
                 const zStep = zRange / (zSlices - 1);
                 zPositions = [];
                 for (let i = 0; i < zSlices; i++) {
-                    zPositions.push(-zRange/2 + i * zStep);
+                    zPositions.push(-zRange / 2 + i * zStep);
                 }
             }
-            
+
             computedZPositions = zPositions.map(z => z / 1000); // Convert to µm for display
-            
+
             // RI mismatch parameters
             let ng = 1.522, ns = 1.33, imagingDepth = 0, glassError = 0;
             if (enableMismatch) {
@@ -964,54 +1074,56 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                 imagingDepth = (parseFloat(document.getElementById('imagingDepth').value) || 0) * 1000; // µm to nm
                 glassError = (parseFloat(document.getElementById('glassError').value) || 0) * 1000; // µm to nm
             }
-            
+
             // Display computed parameters
             const paramsList = document.getElementById('paramsList');
             paramsList.innerHTML = '';
-            
+
             const addParam = (name, value) => {
                 const li = document.createElement('li');
                 li.innerHTML = `<strong>${name}:</strong> ${value}`;
                 paramsList.appendChild(li);
             };
-            
+
             if (pixelSizeAuto) {
-                addParam('Pixel size', `${pixelSize} nm (auto: Nyquist criterion λ/4NA = ${nyquistPixel.toFixed(1)} nm)`);
+                addParam('Pixel size', `${pixelSize} nm (auto-optimized for visibility; Nyquist = ${nyquistPixel.toFixed(1)} nm)`);
             } else {
                 addParam('Pixel size', `${pixelSize} nm (user-specified)`);
             }
-            
+            addParam('Airy disk radius', `${airyRadius.toFixed(1)} nm (first zero)`);
+            addParam('PSF extent shown', `${(gridSize * pixelSize / 1000).toFixed(2)} µm (${(gridSize * pixelSize / airyRadius).toFixed(1)}× Airy radius)`);
+
             addParam('Field of view', `${(gridSize * pixelSize / 1000).toFixed(2)} × ${(gridSize * pixelSize / 1000).toFixed(2)} µm`);
             addParam('Lateral resolution (Rayleigh)', `${(0.61 * wavelength / na).toFixed(1)} nm`);
             addParam('Depth of focus', `${(dof / 1000).toFixed(3)} µm`);
-            
+
             if (enable3d) {
                 const zRangeVal = Math.max(...zPositions) - Math.min(...zPositions);
                 addParam('Z-range', `${(zRangeVal / 1000).toFixed(3)} µm (${zPositions.length} slices)`);
                 addParam('Z-step', `${(zRangeVal / (zPositions.length - 1) / 1000).toFixed(4)} µm`);
             }
-            
+
             if (enableMismatch) {
                 addParam('Model', 'Vectorial Debye-Wolf + Gibson-Lanni aberration');
             } else {
                 addParam('Model', 'Vectorial Debye-Wolf (matched RI)');
             }
-            
+
             document.getElementById('computedParams').style.display = 'block';
-            
+
             // Start computation
             isComputing = true;
             const computeBtn = document.getElementById('computeBtn');
             computeBtn.disabled = true;
             computeBtn.textContent = 'Computing...';
-            
+
             const progressContainer = document.getElementById('progressContainer');
             const progressFill = document.getElementById('progressFill');
             const progressText = document.getElementById('progressText');
             progressContainer.style.display = 'block';
             progressFill.style.width = '0%';
             progressText.textContent = 'Initializing computation...';
-            
+
             // Use setTimeout to allow UI update before heavy computation
             setTimeout(() => {
                 try {
@@ -1028,38 +1140,39 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                         imagingDepth,
                         glassError
                     };
-                    
+
                     const startTime = performance.now();
-                    
+
                     psfStack = computeVectorialPSF(params, (progress) => {
                         progressFill.style.width = `${progress * 100}%`;
                         progressText.textContent = `Computing Z-slice ${Math.round(progress * zPositions.length)} / ${zPositions.length}...`;
                     });
-                    
+
                     const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
                     progressText.textContent = `Completed in ${elapsed} seconds`;
-                    
+
                     // Display focal plane (or middle slice)
                     const midIdx = Math.floor(zPositions.length / 2);
                     psfData = psfStack[midIdx];
                     displayPSFSlice(midIdx);
-                    
+
                     // Show controls
                     document.getElementById('downloadSection').style.display = 'block';
-                    
+                    document.getElementById('displayControls').style.display = 'block';
+
                     if (enable3d) {
                         document.getElementById('zSliceControls').style.display = 'block';
                         const slider = document.getElementById('zSlider');
                         slider.max = zPositions.length - 1;
                         slider.value = midIdx;
-                        document.getElementById('zValue').textContent = 
+                        document.getElementById('zValue').textContent =
                             `z = ${computedZPositions[midIdx].toFixed(3)} µm`;
                         document.getElementById('download3dBtn').style.display = 'inline-block';
                     } else {
                         document.getElementById('zSliceControls').style.display = 'none';
                         document.getElementById('download3dBtn').style.display = 'none';
                     }
-                    
+
                 } catch (e) {
                     errorMsg.textContent = 'Computation error: ' + e.message;
                     errorMsg.style.display = 'block';
@@ -1071,95 +1184,124 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                 }
             }, 50);
         }
-        
+
         // ============================================================
         // DISPLAY FUNCTIONS
         // ============================================================
-        
+
+        // Global to track current z-index for redisplay
+        let currentZIndex = 0;
+
+        function redisplayPSF() {
+            if (psfStack && psfStack.length > 0) {
+                displayPSFSlice(currentZIndex);
+            }
+        }
+
         function displayPSFSlice(idx) {
+            currentZIndex = idx;
             const canvas = document.getElementById('psfCanvas');
             const ctx = canvas.getContext('2d');
             const gridSize = Math.sqrt(psfStack[idx].length);
-            
+
             canvas.width = gridSize;
             canvas.height = gridSize;
             canvas.style.display = 'block';
             document.getElementById('placeholder').style.display = 'none';
-            
+
             const imageData = ctx.createImageData(gridSize, gridSize);
             const data = psfStack[idx];
-            
+
+            // Get display scaling mode
+            const scaleMode = document.getElementById('displayScale').value;
+
             for (let i = 0; i < data.length; i++) {
-                // Linear mapping to 0-255 (peak = 255)
-                const val = Math.round(data[i] * 255);
+                let val;
+                const intensity = data[i];  // 0 to 1 (normalized)
+
+                switch (scaleMode) {
+                    case 'sqrt':
+                        // Square root scaling - good balance of ring visibility
+                        val = Math.round(Math.sqrt(intensity) * 255);
+                        break;
+                    case 'log':
+                        // Logarithmic scaling - maximum contrast for rings
+                        // Use log(1 + x*1000) to enhance low intensities
+                        val = Math.round(Math.log(1 + intensity * 1000) / Math.log(1001) * 255);
+                        break;
+                    default:
+                        // Linear scaling (quantitative)
+                        val = Math.round(intensity * 255);
+                }
+
                 const offset = i * 4;
                 imageData.data[offset] = val;     // R
                 imageData.data[offset + 1] = val; // G
                 imageData.data[offset + 2] = val; // B
                 imageData.data[offset + 3] = 255; // A
             }
-            
+
             ctx.putImageData(imageData, 0, 0);
             psfData = data;
         }
-        
+
         // ============================================================
         // DOWNLOAD FUNCTIONS
         // ============================================================
-        
+
         function downloadPNG() {
             if (!psfData) return;
-            
+
             const canvas = document.getElementById('psfCanvas');
             const link = document.createElement('a');
             link.download = 'PSF_focal_plane.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
-        
+
         function downloadTIFF() {
             if (!psfData) return;
-            
+
             const gridSize = Math.sqrt(psfData.length);
-            
+
             // Create 32-bit float TIFF
             const tiffData = createFloat32TIFF(psfData, gridSize, gridSize);
-            
-            const blob = new Blob([tiffData], {type: 'image/tiff'});
+
+            const blob = new Blob([tiffData], { type: 'image/tiff' });
             const link = document.createElement('a');
             link.download = 'PSF_focal_plane.tiff';
             link.href = URL.createObjectURL(blob);
             link.click();
             URL.revokeObjectURL(link.href);
         }
-        
+
         function download3DTIFF() {
             if (!psfStack || psfStack.length === 0) return;
-            
+
             const gridSize = Math.sqrt(psfStack[0].length);
-            
+
             // Create multi-frame TIFF
             const tiffData = createMultiFrameTIFF(psfStack, gridSize, gridSize);
-            
-            const blob = new Blob([tiffData], {type: 'image/tiff'});
+
+            const blob = new Blob([tiffData], { type: 'image/tiff' });
             const link = document.createElement('a');
             link.download = 'PSF_3D_stack.tiff';
             link.href = URL.createObjectURL(blob);
             link.click();
             URL.revokeObjectURL(link.href);
         }
-        
+
         // ============================================================
         // TIFF ENCODING - 32-bit float for scientific data
         // ============================================================
-        
+
         function createFloat32TIFF(data, width, height) {
             // Simple 32-bit float TIFF encoder
-            // TIFF structure: Header + IFD + Image data
-            
-            const floatData = new Float32Array(data);
-            const imageBytes = floatData.byteLength;
-            
+            // TIFF structure: Header + IFD + Padding + Image data
+
+            const numPixels = width * height;
+            const imageBytes = numPixels * 4; // 4 bytes per Float32
+
             // IFD entries
             const ifdEntries = [
                 { tag: 256, type: 3, count: 1, value: width },           // ImageWidth
@@ -1167,30 +1309,38 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                 { tag: 258, type: 3, count: 1, value: 32 },              // BitsPerSample
                 { tag: 259, type: 3, count: 1, value: 1 },               // Compression (none)
                 { tag: 262, type: 3, count: 1, value: 1 },               // PhotometricInterpretation (grayscale)
-                { tag: 273, type: 4, count: 1, value: 8 + 2 + 12 * 10 + 4 }, // StripOffsets
+                { tag: 273, type: 4, count: 1, value: 0 },               // StripOffsets (will be set later)
                 { tag: 277, type: 3, count: 1, value: 1 },               // SamplesPerPixel
                 { tag: 278, type: 4, count: 1, value: height },          // RowsPerStrip
                 { tag: 279, type: 4, count: 1, value: imageBytes },      // StripByteCounts
                 { tag: 339, type: 3, count: 1, value: 3 },               // SampleFormat (floating point)
             ];
-            
+
             const headerSize = 8;
             const ifdSize = 2 + 12 * ifdEntries.length + 4;
-            const totalSize = headerSize + ifdSize + imageBytes;
-            
+            // Calculate image data offset - must be 4-byte aligned
+            let imageDataOffset = headerSize + ifdSize;
+            const paddingNeeded = (4 - (imageDataOffset % 4)) % 4;
+            imageDataOffset += paddingNeeded;
+
+            // Update StripOffsets entry
+            ifdEntries[5].value = imageDataOffset;
+
+            const totalSize = imageDataOffset + imageBytes;
+
             const buffer = new ArrayBuffer(totalSize);
             const view = new DataView(buffer);
-            
+
             // Header
             view.setUint16(0, 0x4949, true);  // Little endian
             view.setUint16(2, 42, true);       // TIFF magic
             view.setUint32(4, 8, true);        // IFD offset
-            
+
             // IFD
             let offset = 8;
             view.setUint16(offset, ifdEntries.length, true);
             offset += 2;
-            
+
             for (const entry of ifdEntries) {
                 view.setUint16(offset, entry.tag, true);
                 view.setUint16(offset + 2, entry.type, true);
@@ -1198,42 +1348,44 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                 view.setUint32(offset + 8, entry.value, true);
                 offset += 12;
             }
-            
+
             view.setUint32(offset, 0, true);  // Next IFD (none)
-            offset += 4;
-            
-            // Image data
-            const floatView = new Float32Array(buffer, offset, width * height);
-            floatView.set(floatData);
-            
+
+            // Image data - properly convert to Float32 at aligned offset
+            const floatView = new Float32Array(buffer, imageDataOffset, numPixels);
+            for (let i = 0; i < numPixels; i++) {
+                floatView[i] = data[i];
+            }
+
             return new Uint8Array(buffer);
         }
-        
+
         function createMultiFrameTIFF(stack, width, height) {
             // Multi-frame TIFF for 3D stack
             const numFrames = stack.length;
             const pixelsPerFrame = width * height;
             const bytesPerFrame = pixelsPerFrame * 4; // Float32
-            
-            // Calculate sizes
+
+            // Calculate sizes - ensure 4-byte alignment
             const headerSize = 8;
             const entriesPerIFD = 10;
-            const ifdSize = 2 + 12 * entriesPerIFD + 4;
-            const totalIFDSize = ifdSize * numFrames;
+            const ifdSize = 2 + 12 * entriesPerIFD + 4;  // 126 bytes
+            const ifdSizeAligned = Math.ceil(ifdSize / 4) * 4;  // Round up to 4-byte boundary = 128 bytes
+            const totalIFDSize = ifdSizeAligned * numFrames;
             const totalImageSize = bytesPerFrame * numFrames;
             const totalSize = headerSize + totalIFDSize + totalImageSize;
-            
+
             const buffer = new ArrayBuffer(totalSize);
             const view = new DataView(buffer);
-            
+
             // Header
             view.setUint16(0, 0x4949, true);
             view.setUint16(2, 42, true);
             view.setUint32(4, 8, true);
-            
+
             let ifdOffset = 8;
             let imageOffset = headerSize + totalIFDSize;
-            
+
             for (let frame = 0; frame < numFrames; frame++) {
                 const ifdEntries = [
                     { tag: 256, type: 3, count: 1, value: width },
@@ -1247,10 +1399,10 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                     { tag: 279, type: 4, count: 1, value: bytesPerFrame },
                     { tag: 339, type: 3, count: 1, value: 3 },
                 ];
-                
+
                 view.setUint16(ifdOffset, ifdEntries.length, true);
                 let entryOffset = ifdOffset + 2;
-                
+
                 for (const entry of ifdEntries) {
                     view.setUint16(entryOffset, entry.tag, true);
                     view.setUint16(entryOffset + 2, entry.type, true);
@@ -1258,22 +1410,25 @@ OPD_mismatch = Δt_g·(n_g·cos(θ_g) - n_i·cos(θ_i))  [cover glass term]
                     view.setUint32(entryOffset + 8, entry.value, true);
                     entryOffset += 12;
                 }
-                
-                // Next IFD offset
-                const nextIFD = (frame < numFrames - 1) ? ifdOffset + ifdSize : 0;
+
+                // Next IFD offset (using aligned size)
+                const nextIFD = (frame < numFrames - 1) ? ifdOffset + ifdSizeAligned : 0;
                 view.setUint32(entryOffset, nextIFD, true);
-                
-                // Write image data
+
+                // Write image data - properly convert Float64Array to Float32Array
                 const floatView = new Float32Array(buffer, imageOffset, pixelsPerFrame);
-                floatView.set(new Float32Array(stack[frame].buffer ? 
-                    stack[frame].buffer : Array.from(stack[frame])));
-                
-                ifdOffset += ifdSize;
+                const sourceData = stack[frame];
+                for (let i = 0; i < pixelsPerFrame; i++) {
+                    floatView[i] = sourceData[i];
+                }
+
+                ifdOffset += ifdSizeAligned;
                 imageOffset += bytesPerFrame;
             }
-            
+
             return new Uint8Array(buffer);
         }
     </script>
 </body>
+
 </html>
